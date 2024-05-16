@@ -1,0 +1,22 @@
+[ 
+  {
+     "id": 123,
+     "variavel": "akasa", 
+     "unidade": "Mil reais", 
+     "resultados": [ 
+        { 
+           "series": [ 
+              {
+                 "localidade" : {
+                     "id": 1827827, 
+                     "nome": "nome cidade"
+                  },
+                  "serie": { 
+                     "ano": "dado em string" 
+                  }
+              } 
+           ]
+        }
+     ]
+   }
+]
