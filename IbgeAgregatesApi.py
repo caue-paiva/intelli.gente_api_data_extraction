@@ -1,6 +1,6 @@
 from AbstractApiInterface import AbstractApiInterface
 from DataPoint import DataPoint , DataPointTypes
-import requests
+import requests , json , os
 import pandas as pd
 
 """
@@ -13,20 +13,38 @@ TODO
 
 class IbgeAgregatesApi(AbstractApiInterface):
 
-   DB_TO_API_DATA_MAP = {
-      "PIB TOTAL" :  37, 
-      "PIB AGROPECUARIA": 513,
-      "PIB INDUSTRIA": 517,
-      "PIB SERVICOS" : 6575,
-      "PIB ADMINISTRACAO PUBLICA" : 525
-   }
-
    api_name:str
    goverment_agency:str
+   __data_map: dict[int, list[int]]
 
-   def __init__(self, api_name: str, goverment_agency: str) -> None:
+   def __init__(self, api_name: str, goverment_agency: str, data_map_json_path:str) -> None:
       self.api_name = api_name
       self.goverment_agency = goverment_agency
+
+      try:
+         with open(os.path.join(data_map_json_path), "r") as f:
+            loaded_data = json.load(f)
+            if not isinstance(loaded_data,dict):
+               raise IOError("objeto json não está na forma de um dicionário do python")
+            self.__data_map: dict[int, list[int]] = loaded_data
+      
+      except Exception as e:
+           raise RuntimeError("Não foi possível carregar o JSON que mapea os dados do DB para a API")
+           
+   def _db_to_api_data_map(self, db_data_list: list[str | int] = []) -> dict[int, list[int]]:
+    
+      return_dict: dict[int, list[int]] = {} #dicionario cuja key é o agregado e o value é uma lista de variáveis que pertence a esse agregado
+      for key,val in self.__data_map.items():
+         if key in db_data_list or not db_data_list: #se o dado estiver na lista passada ou se lista for vazia, nesse ultimo caso coloca todos os dados do mapping
+            var:int = val["variavel"] 
+            aggregate: int = val["agregado"] 
+
+            if aggregate not in return_dict: #chave do agregado n existe no dict
+               return_dict[aggregate] = [var] #coloca essa chave com um lista com a variavel
+            else:
+               return_dict[aggregate].append(var) #se já existir é so dar append na variável
+      
+      return return_dict
 
    def __response_to_data_points(self,api_response:list[dict])->list[DataPoint]:
       return_data_points:list[DataPoint] = []
@@ -60,7 +78,7 @@ class IbgeAgregatesApi(AbstractApiInterface):
                   
       return return_data_points
    
-   def extract_data_points(self, cities: list[int], data_point_names: list[str] = [] , time_series_len: int = 0) -> list[DataPoint]:
+   def extract_data_points(self, cities: list[int], db_data_list:list[str|int] = [] , time_series_len: int = 0) -> list[DataPoint]:
       if time_series_len > self.MAX_TIME_SERIES_LEN:
          raise IOError(f"tamanho da série temporal em anos excede o limite de {self.MAX_TIME_SERIES_LEN} anos")
       
@@ -71,40 +89,33 @@ class IbgeAgregatesApi(AbstractApiInterface):
          #lógica para incluir todas as cidades
          pass
 
-      api_data_variables: list[int | str] = []
-      if not data_point_names: #vamos usar todos os dados no mapeamento criado para essa subclasse
-         api_data_variables = list(self.DB_TO_API_DATA_MAP.values())
-      else: #vamos usar apenas os dados da lista provida
-         for point in data_point_names:
-            data_api_code: int|str|None  = self.DB_TO_API_DATA_MAP.get(point)
-            
-            if data_api_code is None:
-               raise IOError(f"O dado {point} do argumento da lista de nomes dos dados não pertence ao mapeamento DB_TO_API da classe")
-            
-            api_data_variables.append(data_api_code) #add o código da API referente ao dado na lista
 
-
+      api_data_variables: dict[int,list[int]] = self._db_to_api_data_map(db_data_list)
       base_url = "https://servicodados.ibge.gov.br/api/v3/agregados/{agregado}/periodos/{periodos}/variaveis/{variaveis}"
 
-      str_data_variables:str = '|'.join(map(str, api_data_variables))
-      params = {
-         'localidades': f'N6{cities}'
-      }
-      url:str = base_url.format(agregado=5938, periodos= (-time_series_len), variaveis=str_data_variables)
-      response = requests.get(url, params=params, verify=False)
+      api_data_points: list[DataPoint] = []
+      params = {'localidades': f'N6{cities}'}
 
-      if response.status_code == 200: #request teve sucesso
-         response_data:list[dict] = response.json()
-         return self.__response_to_data_points(response_data)
-      else:
-         raise RuntimeError("Falha na Request para a API")
+      for aggregate in api_data_variables:
+         str_data_variables:str = '|'.join(map(str, api_data_variables[aggregate])) #transforma as variáveis da API em str 
+         
+         url:str = base_url.format(agregado=aggregate , periodos= (-time_series_len), variaveis=str_data_variables)
+         response = requests.get(url, params=params, verify=False)
+
+         if response.status_code == 200: #request teve sucesso
+            response_data:list[dict] = response.json()
+            api_data_points.extend(self.__response_to_data_points(response_data)) #adiciona os elementos retornados a lista final de pontos de dados
+         else:
+            raise RuntimeError("Falha na Request para a API")
+         
+      return api_data_points
 
 
 
 
 
 if __name__ == "__main__":
-   api1 = IbgeAgregatesApi("api agregados", "ibge")
+   api1 = IbgeAgregatesApi("api agregados", "ibge","IbgeAgregatesApiDataMap.json")
 
    d_points:list[DataPoint] = api1.extract_data_points([1100072,1100023],time_series_len=7)
    print(d_points[0].data_type)
@@ -112,3 +123,14 @@ if __name__ == "__main__":
    print(df.head(5))
    print(df.shape)
    print(df["ano"].value_counts())
+
+"""
+  DB_TO_API_DATA_MAP = { #ver se deixar esse dict hard-coded é a melhor opção ou n, talvez usar um JSON?
+         "PIB TOTAL" :  {"variavel": 37 , "agregado": 5938 }, 
+         "PIB AGROPECUARIA": {"variavel": 513 , "agregado": 5938 },
+         "PIB INDUSTRIA": {"variavel": 517 , "agregado": 5938 },
+         "PIB SERVICOS" : {"variavel": 6575 , "agregado": 5938 },
+         "PIB ADMINISTRACAO PUBLICA" : {"variavel": 525 , "agregado": 5938 }
+      }  
+
+"""

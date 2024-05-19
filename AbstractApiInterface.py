@@ -18,23 +18,21 @@ class AbstractApiInterface(ABC):
    def __init__(self, api_name:str, goverment_agency:str) -> None:
       pass
 
-   @property #essa função será um campo da classe e seus objetos e poderá ser acessada do jeito:  nome_objeto.DB_TO_API_DATA_MAP
    @abstractmethod 
-   def DB_TO_API_DATA_MAP(cls)->dict[str|int, str|int]:
+   def _db_to_api_data_map(self, db_data_list:list[str| int])->dict:
       """
-      constante de classe (para cada subclasse da classe abstrata implementar) que mapea o identificador do dado (seu nome ou id, não está decidido)
-      que está na base de dados com o identificador desses dados na API por meio de um dicionário.
+      método que mapea o identificador do dado (seu nome ou id, não está decidido) que está na base de dados 
+      com o identificador desses dados na API por meio de um dicionário. Os dados desse mapeamento estão disponíveis num JSON ou no própio código,
+      isso depende da subclasse específica
 
-      Ex da base de agregados do IBGE, mapeando o nome do dado com as variáveis da base de agregados:
+      Ex da base de agregados do IBGE, mapeando o nome do dado com as o número de sua variável e o número do agregado que ele representa:
       
       {
-       "PIB TOTAL" :  37, 
-       "PIB AGROPECUARIA": 513   
-        ...
+         "PIB TOTAL" :  {"variavel": 37 , "agregado": 5938 }, 
+         "PIB AGROPECUARIA": {"variavel": 513 , "agregado": 5938 },
+         "PIB INDUSTRIA": {"variavel": 517 , "agregado": 5938 },
+         "PIB SERVICOS" : {"variavel": 6575 , "agregado": 5938 },
       }
-
-      TODO:
-      ver se não seria melhor uma função que carrega esse dict de um json ou csv em vez de ter que manualmente escrever um dict grande
 
       """
       pass
