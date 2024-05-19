@@ -10,8 +10,8 @@ class DataPointTypes(Enum):
 
 class DataPoint:
    """
-   Essa classe tem uma relação quase 1-1 com um linha de uma tabela de categorias com dados brutos (a única diferença seria o campo de multiply amount)
-   mas ele é usado para calcular o campo value
+   Essa classe tem uma relação quase 1 <-> 1 com um linha de uma tabela do BD de categorias com dados brutos (a única diferença seria o campo de multiply amount)
+   mas ele é usado para calcular o campo value e não será colocado na tabela
    
    """
    city_id: int
@@ -27,9 +27,9 @@ class DataPoint:
       city_id: int, 
       year: int, 
       data_name: str, 
-      data_type: DataPointTypes, 
-      value: Any, 
-      multiply_amount: int|float = None
+      data_type: DataPointTypes,  
+      multiply_amount: int|float = None,
+      value: Any = None
    ) -> None:
       
       self.city_id = city_id
@@ -82,3 +82,14 @@ class DataPoint:
          sucess_flag = False
 
       return sucess_flag
+   
+   def multiply_value(self, value:Any)-> int | float:
+      if self.data_type not in [DataPointTypes.INT, DataPointTypes.FLOAT]:
+         return value
+      else:
+         if self.data_type == DataPointTypes.INT:
+            converted_val = int(value) 
+         elif self.data_type == DataPointTypes.FLOAT:
+            converted_val = float(value)
+         
+         return converted_val * self.multiply_amount
