@@ -29,8 +29,9 @@ class DataPoint:
       year: int, 
       data_name: str, 
       data_type: DataPointTypes,  
+      value: Any,
       multiply_amount: int|float = None,
-      value: Any = None
+    
    ) -> None:
       
       self.city_id = city_id
@@ -73,7 +74,8 @@ class DataPoint:
       dtype_map: dict[str,DataPointTypes] = {
          "reais" : DataPointTypes.FLOAT,
          "real"  : DataPointTypes.FLOAT,
-         "pessoas": DataPointTypes.INT
+         "pessoas": DataPointTypes.INT,
+         "unidades": DataPointTypes.INT
       }
 
       for key in dtype_map:
@@ -83,17 +85,22 @@ class DataPoint:
             break
       else:
          sucess_flag = False
-         self.data_type = DataPointTypes.UNKNOWN
+         self.data_type = DataPointTypes.STRING
 
       return sucess_flag
    
-   def multiply_value(self, value:Any)-> int | float:
+
+
+   def multiply_value(self)-> int | float | Any:
+      """
+      Retorna o valor multiplicado e convertido no tipo correto do DataPoint
+      """
       if self.data_type not in [DataPointTypes.INT, DataPointTypes.FLOAT]:
-         return value
+         return self.value
       else:
          if self.data_type == DataPointTypes.INT:
-            converted_val = int(value) 
+            converted_val = int(self.value) 
          elif self.data_type == DataPointTypes.FLOAT:
-            converted_val = float(value)
+            converted_val = float(self.value)
          
          return converted_val * self.multiply_amount

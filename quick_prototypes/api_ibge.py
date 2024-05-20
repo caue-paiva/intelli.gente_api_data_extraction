@@ -83,7 +83,7 @@ url = base_url.format(agregado=agregado, periodos=-7, variaveis=96)
 url3 =  "https://servicodados.ibge.gov.br/api/v3/agregados/2409/periodos/-2/variaveis/96/?classificacao=12235[104562,104563]"
 url4 =  "https://servicodados.ibge.gov.br/api/v3/agregados/5938/periodos/-2/variaveis/517|6575"
 
-response = requests.get(url3, params=params, verify=False)
+response = requests.get(url4, params=params, verify=False)
 # Print the response (or handle it as needed)
 print(response.status_code)
 data = response.json()
@@ -94,7 +94,6 @@ with open("teste2.json", "w") as f:
 
 
 processed_data_list:list[dict] = process_ibge_agregate_api(data)
-print(processed_data_list)
 for elem in processed_data_list:
     print(elem)
     print("\n\n\n\n")

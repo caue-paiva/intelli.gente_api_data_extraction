@@ -1,40 +1,11 @@
 [
     {
-        "id": "96",
-        "variavel": "Domicílios particulares permanentes",
-        "unidade": "Unidades",
+        "id": "517",
+        "variavel": "Valor adicionado bruto a preços correntes da indústria",
+        "unidade": "Mil Reais",
         "resultados": [
             {
-                "classificacoes": [
-                    {
-                        "id": "12235",
-                        "nome": "Existência de calçamento/pavimentação da rua no entorno",
-                        "categoria": {
-                            "104562": "Calçamento / pavimentação total"
-                        }
-                    },
-                    {
-                        "id": "1",
-                        "nome": "Situação do domicílio",
-                        "categoria": {
-                            "0": "Total"
-                        }
-                    },
-                    {
-                        "id": "12233",
-                        "nome": "Existência de iluminação pública no entorno",
-                        "categoria": {
-                            "0": "Total"
-                        }
-                    },
-                    {
-                        "id": "12234",
-                        "nome": "Existência de identificação no entorno",
-                        "categoria": {
-                            "0": "Total"
-                        }
-                    }
-                ],
+                "classificacoes": [],
                 "series": [
                     {
                         "localidade": {
@@ -46,7 +17,8 @@
                             "nome": "São Paulo (SP)"
                         },
                         "serie": {
-                            "2000": "2558973"
+                            "2020": "57439419",
+                            "2021": "62513855"
                         }
                     },
                     {
@@ -59,42 +31,21 @@
                             "nome": "Alta Floresta D'Oeste (RO)"
                         },
                         "serie": {
-                            "2000": "380"
+                            "2020": "20715",
+                            "2021": "27847"
                         }
                     }
                 ]
-            },
+            }
+        ]
+    },
+    {
+        "id": "6575",
+        "variavel": "Valor adicionado bruto a preços correntes dos serviços, exclusive administração, defesa, educação e saúde públicas e seguridade social",
+        "unidade": "Mil Reais",
+        "resultados": [
             {
-                "classificacoes": [
-                    {
-                        "id": "12235",
-                        "nome": "Existência de calçamento/pavimentação da rua no entorno",
-                        "categoria": {
-                            "104563": "Calçamento / pavimentação parcial"
-                        }
-                    },
-                    {
-                        "id": "1",
-                        "nome": "Situação do domicílio",
-                        "categoria": {
-                            "0": "Total"
-                        }
-                    },
-                    {
-                        "id": "12233",
-                        "nome": "Existência de iluminação pública no entorno",
-                        "categoria": {
-                            "0": "Total"
-                        }
-                    },
-                    {
-                        "id": "12234",
-                        "nome": "Existência de identificação no entorno",
-                        "categoria": {
-                            "0": "Total"
-                        }
-                    }
-                ],
+                "classificacoes": [],
                 "series": [
                     {
                         "localidade": {
@@ -106,7 +57,8 @@
                             "nome": "São Paulo (SP)"
                         },
                         "serie": {
-                            "2000": "100242"
+                            "2020": "519161241",
+                            "2021": "549767395"
                         }
                     },
                     {
@@ -119,7 +71,8 @@
                             "nome": "Alta Floresta D'Oeste (RO)"
                         },
                         "serie": {
-                            "2000": "137"
+                            "2020": "150233",
+                            "2021": "172435"
                         }
                     }
                 ]
