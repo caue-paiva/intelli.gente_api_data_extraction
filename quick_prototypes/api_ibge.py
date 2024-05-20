@@ -9,12 +9,33 @@ import requests ,json
    "value": 1729862.7
 }
 
-def process_ibge_agregate_api(api_return:list[dict], year:int)->list[dict]:
+def process_single_api_result(list_of_cities:list[dict],data_name:str,data_type:object)->list[dict]:
+   processed_dict_list:list[dict] = []
+
+   for city_dict in list_of_cities:
+      city_id:str = city_dict["localidade"]["id"]
+      city_name:str = city_dict["localidade"]["nome"]
+      serie_histo:dict = city_dict["serie"]
+
+      for ano, valor in serie_histo.items():
+         valor_dado = valor #mudar isso para ser mais flexível
+         processed_dict_list.append({
+                     "id_muni": city_id,
+                     "nome_muni": city_name,
+                     "ano": ano,
+                     "nome_dado": data_name,
+                     "tipo_dado" : data_type,
+                     "valor": valor_dado
+         })
+
+   return processed_dict_list
+
+def process_ibge_agregate_api(api_return:list[dict])->list[dict]:
    processed_dict_list:list[dict] = []
    
-   for data_point in api_return:
-      data_name:str = data_point["variavel"]
-      data_unit: str = data_point["unidade"]
+   for variable in api_return:
+      data_name:str = variable["variavel"]
+      data_unit: str = variable["unidade"]
       data_type:object = str
       multiply_amount:int 
 
@@ -22,24 +43,23 @@ def process_ibge_agregate_api(api_return:list[dict], year:int)->list[dict]:
          data_type = float
          multiply_amount = 1000
 
-      lista_dados: list[dict] = data_point["resultados"][0]["series"]
-      for dado in lista_dados:
-         id_muni = dado["localidade"]["id"]
-         nome = dado["localidade"]["nome"]
 
-         serie_histo:dict = dado["serie"]
+      results_list: list[dict] = variable["resultados"]
+     
+      for result in results_list:
+         list_of_cities:list[dict] = result["series"]
+         processed_result:list[dict] = process_single_api_result(list_of_cities,data_name,data_type)
 
-         for ano, valor in serie_histo.items():
-            valor_dado = valor #mudar isso para ser mais flexível
-            processed_dict_list.append({
-               "id_muni": id_muni,
-               "nome_muni": nome,
-               "ano": ano,
-               "nome_dado": data_name,
-               "tipo_dado" : data_type,
-               "value": valor_dado
-            })
+         if not processed_dict_list:
+            processed_dict_list = processed_result
+         else:
+            add_list_values = lambda x,y: float(x["valor"]) + float(y["valor"])
+            summed_vals = list(map(add_list_values,processed_dict_list,processed_result))
+            
+            for index, val in enumerate(summed_vals):
+               processed_dict_list[index]["valor"] = val
 
+         
    return processed_dict_list
 
 base_url = "https://servicodados.ibge.gov.br/api/v3/agregados/{agregado}/periodos/{periodos}/variaveis/{variaveis}"
@@ -49,31 +69,32 @@ agregado:int = 2409
 periodos:int = -2
 
 variaveis:list[int] = [96]
-id_municipios:list[int] = [3550308]
+id_municipios:list[int] = [3550308,1100015]
 categorias = [0,104563,104562]
 variaveis_str:str = '|'.join(map(str, variaveis))
 
 params = {
-    "classificacao" : "12235[0,104563,104562]",
+   # "classificacao" : "12235[0,104563,104562]",
     'localidades': f'N6{id_municipios}'
-
 }
 
 print(str(id_municipios))
 url = base_url.format(agregado=agregado, periodos=-7, variaveis=96)
-url3 =  "https://servicodados.ibge.gov.br/api/v3/agregados/2409/periodos/-2/variaveis/96/?classificacao=12235[104565,104563,104562]"
-response = requests.get(url, params=params, verify=False)
+url3 =  "https://servicodados.ibge.gov.br/api/v3/agregados/2409/periodos/-2/variaveis/96/?classificacao=12235[104562,104563]"
+url4 =  "https://servicodados.ibge.gov.br/api/v3/agregados/5938/periodos/-2/variaveis/517|6575"
+
+response = requests.get(url3, params=params, verify=False)
 # Print the response (or handle it as needed)
 print(response.status_code)
 data = response.json()
-print(data)
+#print(data)
 
-with open("teste.json", "w") as f:
+with open("teste2.json", "w") as f:
    json.dump(data,f, indent=4, ensure_ascii=False)
 
 
-processed_data_list:list[dict] = process_ibge_agregate_api(data,2010)
-
+processed_data_list:list[dict] = process_ibge_agregate_api(data)
+print(processed_data_list)
 for elem in processed_data_list:
     print(elem)
     print("\n\n\n\n")
