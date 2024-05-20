@@ -66,36 +66,5 @@ class AbstractApiInterface(ABC):
       #coloca as colunas do dataframe
       columns:list[str] = [self.DB_CITY_ID_COLUMN, self.DB_YEAR_COLUMN, self.DB_DATA_IDENTIFIER_COLUMN, self.DB_DATA_VALUE_COLUMN, self.DB_DTYPE_COLUMN]
       df: pd.DataFrame = pd.DataFrame.from_dict(data_point_dict,orient="index",columns=columns) #cria um dataframe a partir do dicionário criado
-      print(df.shape)
-
-      df.to_csv("teste.csv")
-
-      if self._calculated_data_functions: #caso existam dados que precisem ser calculados a partir de outros
-         for new_data_point in self._calculated_data_functions:
-            
-            first_data_point:str = self._calculated_data_functions[new_data_point]["dado_1"]
-            second_data_point:str = self._calculated_data_functions[new_data_point]["dado_2"]
-            operation: str = self._calculated_data_functions[new_data_point]["operacao"]
-
-            first_df:pd.DataFrame  =  df[   df[self.DB_DATA_IDENTIFIER_COLUMN] == first_data_point ]   
-            second_df:pd.DataFrame =  df[   df[self.DB_DATA_IDENTIFIER_COLUMN] == second_data_point]  
-
-            print(first_df.shape , second_df.shape)
-            if (first_df.shape != second_df.shape):
-               raise RuntimeError("As dimensões dos dataframes que vão ser usados no cálculo são diferentes")
-
-            result_df:pd.DataFrame = first_df
-            match (operation):
-               case "+":
-                     result_df[self.DB_DATA_VALUE_COLUMN] = first_df[self.DB_DATA_VALUE_COLUMN] + second_df[self.DB_DATA_VALUE_COLUMN]
-               case "-":
-                     result_df[self.DB_DATA_VALUE_COLUMN] = first_df[self.DB_DATA_VALUE_COLUMN] - second_df[self.DB_DATA_VALUE_COLUMN]
-               case "*":
-                     result_df[self.DB_DATA_VALUE_COLUMN] = first_df[self.DB_DATA_VALUE_COLUMN] * second_df[self.DB_DATA_VALUE_COLUMN]
-               case "/":
-                     result_df[self.DB_DATA_VALUE_COLUMN] = first_df[self.DB_DATA_VALUE_COLUMN] / second_df[self.DB_DATA_VALUE_COLUMN]
-            
-            result_df[self.DB_DATA_IDENTIFIER_COLUMN] = new_data_point
-            df = pd.concat(objs=[df,result_df],axis="index")
-
+      
       return df

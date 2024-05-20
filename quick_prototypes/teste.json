@@ -1,0 +1,150 @@
+[
+    {
+        "id": "96",
+        "variavel": "Domicílios particulares permanentes",
+        "unidade": "Unidades",
+        "resultados": [
+            {
+                "classificacoes": [
+                    {
+                        "id": "12235",
+                        "nome": "Existência de calçamento/pavimentação da rua no entorno",
+                        "categoria": {
+                            "0": "Total"
+                        }
+                    },
+                    {
+                        "id": "1",
+                        "nome": "Situação do domicílio",
+                        "categoria": {
+                            "0": "Total"
+                        }
+                    },
+                    {
+                        "id": "12233",
+                        "nome": "Existência de iluminação pública no entorno",
+                        "categoria": {
+                            "0": "Total"
+                        }
+                    },
+                    {
+                        "id": "12234",
+                        "nome": "Existência de identificação no entorno",
+                        "categoria": {
+                            "0": "Total"
+                        }
+                    }
+                ],
+                "series": [
+                    {
+                        "localidade": {
+                            "id": "3550308",
+                            "nivel": {
+                                "id": "N6",
+                                "nome": "Município"
+                            },
+                            "nome": "São Paulo (SP)"
+                        },
+                        "serie": {
+                            "2000": "2984416"
+                        }
+                    }
+                ]
+            },
+            {
+                "classificacoes": [
+                    {
+                        "id": "12235",
+                        "nome": "Existência de calçamento/pavimentação da rua no entorno",
+                        "categoria": {
+                            "104563": "Calçamento / pavimentação parcial"
+                        }
+                    },
+                    {
+                        "id": "1",
+                        "nome": "Situação do domicílio",
+                        "categoria": {
+                            "0": "Total"
+                        }
+                    },
+                    {
+                        "id": "12233",
+                        "nome": "Existência de iluminação pública no entorno",
+                        "categoria": {
+                            "0": "Total"
+                        }
+                    },
+                    {
+                        "id": "12234",
+                        "nome": "Existência de identificação no entorno",
+                        "categoria": {
+                            "0": "Total"
+                        }
+                    }
+                ],
+                "series": [
+                    {
+                        "localidade": {
+                            "id": "3550308",
+                            "nivel": {
+                                "id": "N6",
+                                "nome": "Município"
+                            },
+                            "nome": "São Paulo (SP)"
+                        },
+                        "serie": {
+                            "2000": "100242"
+                        }
+                    }
+                ]
+            },
+            {
+                "classificacoes": [
+                    {
+                        "id": "12235",
+                        "nome": "Existência de calçamento/pavimentação da rua no entorno",
+                        "categoria": {
+                            "104562": "Calçamento / pavimentação total"
+                        }
+                    },
+                    {
+                        "id": "1",
+                        "nome": "Situação do domicílio",
+                        "categoria": {
+                            "0": "Total"
+                        }
+                    },
+                    {
+                        "id": "12233",
+                        "nome": "Existência de iluminação pública no entorno",
+                        "categoria": {
+                            "0": "Total"
+                        }
+                    },
+                    {
+                        "id": "12234",
+                        "nome": "Existência de identificação no entorno",
+                        "categoria": {
+                            "0": "Total"
+                        }
+                    }
+                ],
+                "series": [
+                    {
+                        "localidade": {
+                            "id": "3550308",
+                            "nivel": {
+                                "id": "N6",
+                                "nome": "Município"
+                            },
+                            "nome": "São Paulo (SP)"
+                        },
+                        "serie": {
+                            "2000": "2558973"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+]

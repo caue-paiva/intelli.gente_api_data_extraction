@@ -79,6 +79,7 @@ class DataPoint:
       for key in dtype_map:
          if key in lowercase_str:
             self.data_type = dtype_map[key]
+            sucess_flag = True
             break
       else:
          sucess_flag = False

@@ -1,16 +1,15 @@
 from AbstractApiInterface import AbstractApiInterface
 from DataPoint  import DataPoint, DataPointTypes
-import requests , json , os
+import requests,json , os
 import pandas as pd
-from typing import Callable
-
 
 
 
 """
 TODO
 
-1) criar uma lógica nessa classe (e talvez na superclasse de forma mais geneŕica) para lidar com o ID dos agregados na api de agregados do IBGE
+1) Fazer com que o extrador de dados da API para os data points consiga extrair dados que vem com diversas categorias, ver como isso pode funcionar e como 
+não fazer isso quebrar a lógica antiga. Acho que isso deve finalizar a lógica do extrator do IBGE agregados
 
 """
 
@@ -20,7 +19,6 @@ class IbgeAgregatesApi(AbstractApiInterface):
    api_name:str
    goverment_agency:str
    _data_map: dict[str, dict]
-   _calculated_data_functions: dict[str, dict] | None
 
    def __init__(self, api_name: str, goverment_agency: str, api_referen_json_path:str) -> None:
       self.api_name = api_name
@@ -31,28 +29,48 @@ class IbgeAgregatesApi(AbstractApiInterface):
             loaded_data = json.load(f)
             if not isinstance(loaded_data,dict):
                raise IOError("objeto json não está na forma de um dicionário do python")
-            self._data_map: dict[str, dict] = loaded_data["dados_diretos"]
-            self._calculated_data_functions = loaded_data.get("dado_calculados")
+            self._data_map: dict[str, dict] = loaded_data
       
       except Exception as e:
            raise RuntimeError("Não foi possível carregar o JSON que mapea os dados do DB para a API")
       
-   def _db_to_api_data_map(self, db_data_list: list[str|int] = []) -> dict[int, list[int]]:
-    
-      return_dict: dict[int, list[int]] = {} #dicionario cuja key é o agregado e o value é uma lista de variáveis que pertence a esse agregado
+   def _db_to_api_data_map(self, db_data_list: list[str|int] = []) -> tuple[dict[int,list] , dict[int,dict]]:
+      """
+      Tuple: (
+         var dict : {
+            2198298: [189289,2108291]
+         },
+         classification_dict: {
+            2198298: {
+               189289: "18278"
+            }
+         }
+      )
+      """
+
+      variables_dict: dict[int, list[int]] = {} #dicionario cuja key é o agregado e o value é uma lista de variáveis que pertence a esse agregado
+      classification_dict: dict[int, dict[int,list]] = {}
+
       for key,val in self._data_map.items():
          if key in db_data_list or not db_data_list: #se o dado estiver na lista passada ou se lista for vazia, nesse ultimo caso coloca todos os dados do mapping
-            var:int = val["variavel"] 
+            var:int | None = val.get("variavel") #a variável pode não aparecer em alguns dados buscados
             aggregate: int = val["agregado"] 
+            classification:str | None = val.get("classificacao")
 
-            if aggregate not in return_dict: #chave do agregado n existe no dict
-               return_dict[aggregate] = [var] #coloca essa chave com um lista com a variavel
-            else:
-               return_dict[aggregate].append(var) #se já existir é so dar append na variável
-      
-      return return_dict
+            if var is None and classification is None:
+               raise IOError("Ambos a variável e a classificação não existem ou não None")
+
+            if classification is not None: #caso especial com classificação
+               classification_dict.setdefault(aggregate,{})
+               var_key:int = var if var is not None else -1
+               classification_dict[aggregate][var_key] = classification
+            else:  #caso normal so com a variável
+               variables_dict.setdefault(aggregate,[])
+               variables_dict[aggregate].append(var)
+            
+
+      return variables_dict,classification_dict
    
- 
    def __find_data_name_by_id(self,variable_id:int)->str | None:
       for key, value in self._data_map.items():
         if value.get("variavel") == variable_id:
@@ -95,6 +113,26 @@ class IbgeAgregatesApi(AbstractApiInterface):
                   
       return return_data_points
    
+   def __make_api_call(self,time_series_len:int,cities:list[int],aggregate:int ,variables:str = "", classification:str = "")->list[dict]:
+      params:dict = {}
+      if classification:
+         params = {'localidades': f'N6{cities}'}
+         if "[" in variables and "]" in variables:
+            raise IOError("Não é possível realizar uma chamada da API com uma classificação e mais de uma variável")
+      else:
+         params = {"classificacao": classification ,'localidades': f'N6{cities}' }
+
+      base_url:str = "https://servicodados.ibge.gov.br/api/v3/agregados/{agregado}/periodos/{periodos}/variaveis/{variaveis}"
+
+      url:str = base_url.format(agregado=aggregate , periodos= (-time_series_len), variaveis=variables)
+      response = requests.get(url, params=params, verify=False)
+
+      if response.status_code == 200: #request teve sucesso
+         response_data:list[dict] = response.json()
+         return self.__api_to_data_points(response_data) #adiciona os elementos retornados a lista final de pontos de dados
+      else:
+         raise RuntimeError("Falha na Request para a API")
+
    def extract_data_points(self, cities: list[int], db_data_list:list[str|int] = [] , time_series_len: int = 0) -> list[DataPoint]:
       if time_series_len > self.MAX_TIME_SERIES_LEN:
          raise IOError(f"tamanho da série temporal em anos excede o limite de {self.MAX_TIME_SERIES_LEN} anos")
@@ -106,28 +144,18 @@ class IbgeAgregatesApi(AbstractApiInterface):
          #lógica para incluir todas as cidades
          pass
 
-
-      api_data_variables: dict[int,list[int]] = self._db_to_api_data_map(db_data_list)
-      base_url = "https://servicodados.ibge.gov.br/api/v3/agregados/{agregado}/periodos/{periodos}/variaveis/{variaveis}"
-
+      variables_api_calls, classification_api_calls = self._db_to_api_data_map(db_data_list)
       api_data_points: list[DataPoint] = []
-      params = {'localidades': f'N6{cities}'}
-
-      for aggregate in api_data_variables:
-         str_data_variables:str = '|'.join(map(str, api_data_variables[aggregate])) #transforma as variáveis da API em str 
-         
-         url:str = base_url.format(agregado=aggregate , periodos= (-time_series_len), variaveis=str_data_variables)
-         response = requests.get(url, params=params, verify=False)
-
-         if response.status_code == 200: #request teve sucesso
-            response_data:list[dict] = response.json()
-            api_data_points.extend(self.__api_to_data_points(response_data)) #adiciona os elementos retornados a lista final de pontos de dados
-         else:
-            raise RuntimeError("Falha na Request para a API")
-         
+   
+      for aggregate in variables_api_calls: #faz as chamadas de APIs que somente tem variáveis
+         str_data_variables:str = '|'.join(map(str, variables_api_calls[aggregate])) #transforma as variáveis da API em str 
+         api_data_points.extend(self.__make_api_call(time_series_len,cities,aggregate,str_data_variables))
+      
+      for aggregate in classification_api_calls: #faz as chamadas de APIs que somente tem variáveis
+         for var_key, classification in classification_api_calls[aggregate].items():
+            api_data_points.extend(self.__make_api_call(time_series_len,cities,aggregate,str(var_key),classification)) #adiciona os elementos retornados a lista final de pontos de dados
+      
       return api_data_points
-
-
 
 if __name__ == "__main__":
    api1 = IbgeAgregatesApi("api agregados", "ibge","IbgeAgregatesApiDataMap.json")
@@ -139,30 +167,4 @@ if __name__ == "__main__":
    print(df.shape)
    print(df.info())
 
-"""
-
-  def __create_calculated_data_funcs(self, dict_template:dict)->None:
-      functions_dict: dict[str, Callable[[pd.Series], pd.Series]] = {}
-
-      for key, val in  dict_template:
-         operand1: str = val["operando1"]
-         operand2: str = val["operando2"]
-         operation: str = val["operacao"]
-
-         generated_func: Callable[[pd.Series], pd.Series] #a função vai receber um Dataframe e retornar 
-
-         match (operation):
-            case "+":
-               generated_func = lambda x : x[ x[self.DB_DATA_IDENTIFIER_COLUMN == operand1] ] + x[x[ self.DB_DATA_IDENTIFIER_COLUMN == operand2]]
-            case "-":
-               generated_func = lambda x : x[ x[self.DB_DATA_IDENTIFIER_COLUMN == operand1] ] - x[x[ self.DB_DATA_IDENTIFIER_COLUMN == operand2]]
-            case "*":
-               generated_func = lambda x : x[ x[self.DB_DATA_IDENTIFIER_COLUMN == operand1] ] * x[x[ self.DB_DATA_IDENTIFIER_COLUMN == operand2]]
-            case "/":
-               generated_func = lambda x : x[ x[self.DB_DATA_IDENTIFIER_COLUMN == operand1] ] / x[x[ self.DB_DATA_IDENTIFIER_COLUMN == operand2]]
-         
-         functions_dict[key] = generated_func
-
-      self.calculated_data_functions = functions_dict   
-
-"""
+   df.to_csv(os.path.join("dados_extraidos","base_agregados_ibge.csv"))

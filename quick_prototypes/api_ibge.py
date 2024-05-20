@@ -1,4 +1,4 @@
-import requests
+import requests ,json
 
 {
    "id_muni":1829,
@@ -43,26 +43,33 @@ def process_ibge_agregate_api(api_return:list[dict], year:int)->list[dict]:
    return processed_dict_list
 
 base_url = "https://servicodados.ibge.gov.br/api/v3/agregados/{agregado}/periodos/{periodos}/variaveis/{variaveis}"
+url2 = "https://servicodados.ibge.gov.br/api/v3/agregados/2409/metadados"
 
-agregado:int = 9606
+agregado:int = 2409
 periodos:int = -2
 
-variaveis:list[int] = [93]
+variaveis:list[int] = [96]
 id_municipios:list[int] = [3550308]
-
+categorias = [0,104563,104562]
 variaveis_str:str = '|'.join(map(str, variaveis))
 
 params = {
+    "classificacao" : "12235[0,104563,104562]",
     'localidades': f'N6{id_municipios}'
+
 }
 
 print(str(id_municipios))
-url = base_url.format(agregado=agregado, periodos=-7, variaveis=variaveis_str)
+url = base_url.format(agregado=agregado, periodos=-7, variaveis=96)
+url3 =  "https://servicodados.ibge.gov.br/api/v3/agregados/2409/periodos/-2/variaveis/96/?classificacao=12235[104565,104563,104562]"
 response = requests.get(url, params=params, verify=False)
-
 # Print the response (or handle it as needed)
+print(response.status_code)
 data = response.json()
 print(data)
+
+with open("teste.json", "w") as f:
+   json.dump(data,f, indent=4, ensure_ascii=False)
 
 
 processed_data_list:list[dict] = process_ibge_agregate_api(data,2010)
