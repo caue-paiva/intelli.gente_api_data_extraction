@@ -6,6 +6,7 @@ class DataPointTypes(Enum):
    FLOAT = "float"
    STRING = "str"
    BOOL = "bool"
+   UNKNOWN = "unknown"
 
 
 class DataPoint:
@@ -71,7 +72,8 @@ class DataPoint:
 
       dtype_map: dict[str,DataPointTypes] = {
          "reais" : DataPointTypes.FLOAT,
-         "real"  : DataPointTypes.FLOAT
+         "real"  : DataPointTypes.FLOAT,
+         "pessoas": DataPointTypes.INT
       }
 
       for key in dtype_map:
@@ -80,6 +82,7 @@ class DataPoint:
             break
       else:
          sucess_flag = False
+         self.data_type = DataPointTypes.UNKNOWN
 
       return sucess_flag
    

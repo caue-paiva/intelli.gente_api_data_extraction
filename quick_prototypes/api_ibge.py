@@ -15,7 +15,7 @@ def process_ibge_agregate_api(api_return:list[dict], year:int)->list[dict]:
    for data_point in api_return:
       data_name:str = data_point["variavel"]
       data_unit: str = data_point["unidade"]
-      data_type:object 
+      data_type:object = str
       multiply_amount:int 
 
       if data_unit == "Mil Reais":
@@ -30,7 +30,7 @@ def process_ibge_agregate_api(api_return:list[dict], year:int)->list[dict]:
          serie_histo:dict = dado["serie"]
 
          for ano, valor in serie_histo.items():
-            valor_dado = float(valor) * multiply_amount #mudar isso para ser mais flexível
+            valor_dado = valor #mudar isso para ser mais flexível
             processed_dict_list.append({
                "id_muni": id_muni,
                "nome_muni": nome,
@@ -44,11 +44,11 @@ def process_ibge_agregate_api(api_return:list[dict], year:int)->list[dict]:
 
 base_url = "https://servicodados.ibge.gov.br/api/v3/agregados/{agregado}/periodos/{periodos}/variaveis/{variaveis}"
 
-agregado:int = 5938
+agregado:int = 9606
 periodos:int = -2
 
-variaveis:list[int] = [37, 513, 517, 6575, 525]
-id_municipios:list[int] = [1100023]
+variaveis:list[int] = [93]
+id_municipios:list[int] = [3550308]
 
 variaveis_str:str = '|'.join(map(str, variaveis))
 
@@ -57,12 +57,12 @@ params = {
 }
 
 print(str(id_municipios))
-url = base_url.format(agregado=agregado, periodos=periodos, variaveis=variaveis_str)
+url = base_url.format(agregado=agregado, periodos=-7, variaveis=variaveis_str)
 response = requests.get(url, params=params, verify=False)
 
 # Print the response (or handle it as needed)
 data = response.json()
-
+print(data)
 
 
 processed_data_list:list[dict] = process_ibge_agregate_api(data,2010)
