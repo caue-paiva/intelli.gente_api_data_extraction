@@ -219,4 +219,4 @@ if __name__ == "__main__":
    print(df.shape)
    print(df.info())
 
-   df.to_csv(os.path.join("dados_extraidos","base_agregados_ibge_com_classificao.csv"))
+   df.to_csv(os.path.join("dados_extraidos","base_agregados_ibge_metadados_serie_histo.csv"))
