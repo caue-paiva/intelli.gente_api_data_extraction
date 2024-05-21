@@ -8,8 +8,16 @@ import pandas as pd
 """
 TODO
 
-1) Fazer com que o extrador de dados da API para os data points consiga extrair dados que vem com diversas categorias, ver como isso pode funcionar e como 
-não fazer isso quebrar a lógica antiga. Acho que isso deve finalizar a lógica do extrator do IBGE agregados
+1) Fazer alguma coisa para caso a lista de cidades não seja passada, pegar todas as cidades do país
+
+2) Extrair dados do Percentual de domicílios com população vivendo em aglomerados subnormais (dado é o indicador)
+
+3) Fazer alguma coisa para saber quantos e quais anos da série histórica estão disponíveis para cada ponto de dado, 2 soluções:
+
+   1) Operações com o DF final, seria custoso mas fácil
+
+   2) Mudar na extração da API em si, seria mais complexo porém mais eficiente
+
 
 """
 
