@@ -1,5 +1,5 @@
-from AbstractApiInterface import AbstractApiInterface
-from DataPoint  import DataPoint, DataPointTypes
+from ApiHelperClasses.AbstractApiInterface import AbstractApiInterface
+from ApiHelperClasses.DataPoint  import DataPoint, DataPointTypes
 import requests,json , os
 import pandas as pd
 
@@ -201,7 +201,8 @@ class IbgeAgregatesApi(AbstractApiInterface):
       return api_data_points
 
 if __name__ == "__main__":
-   api1 = IbgeAgregatesApi("api agregados", "ibge","IbgeAgregatesApiDataMap.json")
+   json_path:str = os.path.join("AgregadoApiJsons","IbgeAgregatesApiDataMap.json")
+   api1 = IbgeAgregatesApi("api agregados", "ibge",json_path)
 
    d_points:list[DataPoint] = api1.extract_data_points([1100072,1100023],time_series_len=7)
    #print(d_points[0].data_type)
@@ -210,4 +211,4 @@ if __name__ == "__main__":
    print(df.shape)
    print(df.info())
 
-   df.to_csv(os.path.join("dados_extraidos","base_agregados_ibge.csv"))
+   df.to_csv(os.path.join("dados_extraidos","base_agregados_ibge_com_classificao.csv"))

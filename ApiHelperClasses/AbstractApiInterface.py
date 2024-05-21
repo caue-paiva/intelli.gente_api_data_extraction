@@ -1,4 +1,4 @@
-from DataPoint import DataPoint
+from  .DataPoint import DataPoint
 from abc import ABC , abstractmethod
 import pandas as pd
 
