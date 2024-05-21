@@ -1,78 +1,245 @@
 [
     {
-        "id": "517",
-        "variavel": "Valor adicionado bruto a preços correntes da indústria",
-        "unidade": "Mil Reais",
+        "id": "96",
+        "variavel": "Domicílios particulares permanentes",
+        "unidade": "Unidades",
         "resultados": [
             {
-                "classificacoes": [],
+                "classificacoes": [
+                    {
+                        "id": "12235",
+                        "nome": "Existência de calçamento/pavimentação da rua no entorno",
+                        "categoria": {
+                            "104562": "Calçamento / pavimentação total"
+                        }
+                    },
+                    {
+                        "id": "1",
+                        "nome": "Situação do domicílio",
+                        "categoria": {
+                            "1": "Urbana"
+                        }
+                    },
+                    {
+                        "id": "12233",
+                        "nome": "Existência de iluminação pública no entorno",
+                        "categoria": {
+                            "0": "Total"
+                        }
+                    },
+                    {
+                        "id": "12234",
+                        "nome": "Existência de identificação no entorno",
+                        "categoria": {
+                            "0": "Total"
+                        }
+                    }
+                ],
                 "series": [
                     {
                         "localidade": {
-                            "id": "3550308",
+                            "id": "1100072",
                             "nivel": {
                                 "id": "N6",
                                 "nome": "Município"
                             },
-                            "nome": "São Paulo (SP)"
+                            "nome": "Corumbiara (RO)"
                         },
                         "serie": {
-                            "2020": "57439419",
-                            "2021": "62513855"
+                            "2000": "150"
                         }
                     },
                     {
                         "localidade": {
-                            "id": "1100015",
+                            "id": "1100023",
                             "nivel": {
                                 "id": "N6",
                                 "nome": "Município"
                             },
-                            "nome": "Alta Floresta D'Oeste (RO)"
+                            "nome": "Ariquemes (RO)"
                         },
                         "serie": {
-                            "2020": "20715",
-                            "2021": "27847"
+                            "2000": "6139"
                         }
                     }
                 ]
-            }
-        ]
-    },
-    {
-        "id": "6575",
-        "variavel": "Valor adicionado bruto a preços correntes dos serviços, exclusive administração, defesa, educação e saúde públicas e seguridade social",
-        "unidade": "Mil Reais",
-        "resultados": [
+            },
             {
-                "classificacoes": [],
+                "classificacoes": [
+                    {
+                        "id": "12235",
+                        "nome": "Existência de calçamento/pavimentação da rua no entorno",
+                        "categoria": {
+                            "104562": "Calçamento / pavimentação total"
+                        }
+                    },
+                    {
+                        "id": "1",
+                        "nome": "Situação do domicílio",
+                        "categoria": {
+                            "2": "Rural"
+                        }
+                    },
+                    {
+                        "id": "12233",
+                        "nome": "Existência de iluminação pública no entorno",
+                        "categoria": {
+                            "0": "Total"
+                        }
+                    },
+                    {
+                        "id": "12234",
+                        "nome": "Existência de identificação no entorno",
+                        "categoria": {
+                            "0": "Total"
+                        }
+                    }
+                ],
                 "series": [
                     {
                         "localidade": {
-                            "id": "3550308",
+                            "id": "1100072",
                             "nivel": {
                                 "id": "N6",
                                 "nome": "Município"
                             },
-                            "nome": "São Paulo (SP)"
+                            "nome": "Corumbiara (RO)"
                         },
                         "serie": {
-                            "2020": "519161241",
-                            "2021": "549767395"
+                            "2000": "-"
                         }
                     },
                     {
                         "localidade": {
-                            "id": "1100015",
+                            "id": "1100023",
                             "nivel": {
                                 "id": "N6",
                                 "nome": "Município"
                             },
-                            "nome": "Alta Floresta D'Oeste (RO)"
+                            "nome": "Ariquemes (RO)"
                         },
                         "serie": {
-                            "2020": "150233",
-                            "2021": "172435"
+                            "2000": "268"
+                        }
+                    }
+                ]
+            },
+            {
+                "classificacoes": [
+                    {
+                        "id": "12235",
+                        "nome": "Existência de calçamento/pavimentação da rua no entorno",
+                        "categoria": {
+                            "104563": "Calçamento / pavimentação parcial"
+                        }
+                    },
+                    {
+                        "id": "1",
+                        "nome": "Situação do domicílio",
+                        "categoria": {
+                            "1": "Urbana"
+                        }
+                    },
+                    {
+                        "id": "12233",
+                        "nome": "Existência de iluminação pública no entorno",
+                        "categoria": {
+                            "0": "Total"
+                        }
+                    },
+                    {
+                        "id": "12234",
+                        "nome": "Existência de identificação no entorno",
+                        "categoria": {
+                            "0": "Total"
+                        }
+                    }
+                ],
+                "series": [
+                    {
+                        "localidade": {
+                            "id": "1100072",
+                            "nivel": {
+                                "id": "N6",
+                                "nome": "Município"
+                            },
+                            "nome": "Corumbiara (RO)"
+                        },
+                        "serie": {
+                            "2000": "64"
+                        }
+                    },
+                    {
+                        "localidade": {
+                            "id": "1100023",
+                            "nivel": {
+                                "id": "N6",
+                                "nome": "Município"
+                            },
+                            "nome": "Ariquemes (RO)"
+                        },
+                        "serie": {
+                            "2000": "1046"
+                        }
+                    }
+                ]
+            },
+            {
+                "classificacoes": [
+                    {
+                        "id": "12235",
+                        "nome": "Existência de calçamento/pavimentação da rua no entorno",
+                        "categoria": {
+                            "104563": "Calçamento / pavimentação parcial"
+                        }
+                    },
+                    {
+                        "id": "1",
+                        "nome": "Situação do domicílio",
+                        "categoria": {
+                            "2": "Rural"
+                        }
+                    },
+                    {
+                        "id": "12233",
+                        "nome": "Existência de iluminação pública no entorno",
+                        "categoria": {
+                            "0": "Total"
+                        }
+                    },
+                    {
+                        "id": "12234",
+                        "nome": "Existência de identificação no entorno",
+                        "categoria": {
+                            "0": "Total"
+                        }
+                    }
+                ],
+                "series": [
+                    {
+                        "localidade": {
+                            "id": "1100072",
+                            "nivel": {
+                                "id": "N6",
+                                "nome": "Município"
+                            },
+                            "nome": "Corumbiara (RO)"
+                        },
+                        "serie": {
+                            "2000": "9"
+                        }
+                    },
+                    {
+                        "localidade": {
+                            "id": "1100023",
+                            "nivel": {
+                                "id": "N6",
+                                "nome": "Município"
+                            },
+                            "nome": "Ariquemes (RO)"
+                        },
+                        "serie": {
+                            "2000": "92"
                         }
                     }
                 ]

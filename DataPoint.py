@@ -6,7 +6,8 @@ class DataPointTypes(Enum):
    FLOAT = "float"
    STRING = "str"
    BOOL = "bool"
-   UNKNOWN = "unknown"
+   UNKNOWN = "str"
+   NULL = "NULL"
 
 
 class DataPoint:
@@ -28,10 +29,9 @@ class DataPoint:
       city_id: int, 
       year: int, 
       data_name: str, 
-      data_type: DataPointTypes,  
       value: Any,
-      multiply_amount: int|float = None,
-    
+      data_type: DataPointTypes = DataPointTypes.STRING, 
+      multiply_amount: int|float = 1,
    ) -> None:
       
       self.city_id = city_id
@@ -39,20 +39,19 @@ class DataPoint:
       self.data_name = data_name
       self.data_type = data_type
       self.value = value
+      self.multiply_amount = multiply_amount
 
-      if multiply_amount is None:
-         self.multiply_amount = 1
-      else:
-         if self.data_type not in [DataPointTypes.INT, DataPointTypes.FLOAT]:
-            raise IOError("Valor de multiplicação não é valido para tipos que não sejam inteiros ou float")
-         self.multiply_amount = multiply_amount
+      if self.data_type not in [DataPointTypes.INT, DataPointTypes.FLOAT] and multiply_amount != 1:
+            raise IOError("Valor de multiplicação além de 1 (default) não é valido para tipos que não sejam inteiros ou float")
+     
+      self.transform_value()
 
    def infer_dtype_and_multiply_amnt(self, unit_description_str:str)->bool:
       """
       APIs como a do ibge tem um campo chamado "unidade", onde é explicado qual unidade o dado se refere, essa unidade pode seguir um padrão como
       "mil reais" e a partir desses padrões é possível inferir o tipo de dado e quanto precisa multiplicar o dado
       
-      
+      Transforma o valor do DataPoint baseado no tipo e qntd de multiplicação inferida
       """
       sucess_flag:bool = True #vai ser retornado true se foi possível inferir tanto o tipo de dado quanto a qntd pra multiplicar da string
 
@@ -86,21 +85,29 @@ class DataPoint:
       else:
          sucess_flag = False
          self.data_type = DataPointTypes.STRING
-
+      
+      self.transform_value()
       return sucess_flag
    
-
-
-   def multiply_value(self)-> int | float | Any:
+   def transform_value(self)->None:
       """
-      Retorna o valor multiplicado e convertido no tipo correto do DataPoint
+      Transforma o campo value de acordo com o tipo de dado e o valor de multiplicar
       """
-      if self.data_type not in [DataPointTypes.INT, DataPointTypes.FLOAT]:
-         return self.value
-      else:
-         if self.data_type == DataPointTypes.INT:
-            converted_val = int(self.value) 
-         elif self.data_type == DataPointTypes.FLOAT:
-            converted_val = float(self.value)
-         
-         return converted_val * self.multiply_amount
+      match (self.data_type):
+       case DataPointTypes.STRING:
+            self.value = str(self.value)
+       case DataPointTypes.INT:
+            self.value = int(self.value) * self.multiply_amount
+       case DataPointTypes.FLOAT:
+            self.value = float(self.value) * self.multiply_amount
+       case DataPointTypes.BOOL:
+            self.value = bool(self.value) 
+       case _:
+            self.value = str(self.value) #caso o tipo de dado seja desconhecido, ele será um string
+       
+   def __str__(self)->str:
+      return f"""
+      nome dado: {self.data_name}
+      id_muni: {self.city_id}  
+      valor: {self.value}  
+      """

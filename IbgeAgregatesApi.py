@@ -16,6 +16,13 @@ não fazer isso quebrar a lógica antiga. Acho que isso deve finalizar a lógica
 
 class IbgeAgregatesApi(AbstractApiInterface):
 
+   IBGE_NAN_CODES:dict[str,dict] = { #Códigos que o IBGE adota para valores fora do normal na sua API
+      "-": {"val": 0, "type": DataPointTypes.INT}, #Dado numérico igual a zero não resultante de arredondamento
+      "..": {"val": None,"type":DataPointTypes.NULL}, #Não se aplica dado numérico
+      "...": {"val": None,"type":DataPointTypes.NULL},  #Dado numérico não disponível
+      "X":   {"val": None,"type":DataPointTypes.NULL} #Dado numérico omitido a fim de evitar a individualização da informação
+   }
+
    api_name:str
    goverment_agency:str
    _data_map: dict[str, dict]
@@ -34,15 +41,15 @@ class IbgeAgregatesApi(AbstractApiInterface):
       except Exception as e:
            raise RuntimeError("Não foi possível carregar o JSON que mapea os dados do DB para a API")
       
-   def _db_to_api_data_map(self, db_data_list: list[str|int] = []) -> tuple[dict[int,list] , dict[int,dict]]:
+   def _db_to_api_data_map(self, db_data_list: list[str|int] = []) -> tuple[dict[int,list] ,  dict[int, dict[int,list]]]:
       """
       Tuple: (
          var dict : {
             2198298: [189289,2108291]
          },
          classification_dict: {
-            2198298: {
-               189289: "18278"
+            2198298 (agregado): { 
+               189289 (var): ["12235[104562,104563]", 12235[all] ] lista de classificações
             }
          }
       )
@@ -54,7 +61,7 @@ class IbgeAgregatesApi(AbstractApiInterface):
       for key,val in self._data_map.items():
          if key in db_data_list or not db_data_list: #se o dado estiver na lista passada ou se lista for vazia, nesse ultimo caso coloca todos os dados do mapping
             var:int | None = val.get("variavel") #a variável pode não aparecer em alguns dados buscados
-            aggregate: int = val["agregado"] 
+            aggregate: int = val["agregado"] #agregado sempre deve
             classification:str | None = val.get("classificacao")
 
             if var is None and classification is None:
@@ -63,7 +70,8 @@ class IbgeAgregatesApi(AbstractApiInterface):
             if classification is not None: #caso especial com classificação
                classification_dict.setdefault(aggregate,{})
                var_key:int = var if var is not None else -1
-               classification_dict[aggregate][var_key] = classification
+               classification_dict[aggregate].setdefault(var_key,[]) #cria uma lista de classificações associadas àquela variavel
+               classification_dict[aggregate][var_key].append(classification)
             else:  #caso normal so com a variável
                variables_dict.setdefault(aggregate,[])
                variables_dict[aggregate].append(var)
@@ -71,12 +79,15 @@ class IbgeAgregatesApi(AbstractApiInterface):
 
       return variables_dict,classification_dict
    
-   def __find_data_name_by_id(self,variable_id:int)->str | None:
+   def __find_data_name_by_id(self,variable_id:int ,classification:str = "")->str | None:
       for key, value in self._data_map.items():
-        if value.get("variavel") == variable_id:
-            return key
+         if not classification:
+            if value.get("variavel") == variable_id:
+               return key
+         else:
+            if value.get("variavel") == variable_id and value.get("classificacao") == classification:
+               return key
       return None
-
 
    def __process_single_api_result(self,list_of_cities:list[dict],data_name:str,data_unit:str)->list[DataPoint] :
       return_data_points:list[DataPoint] = []
@@ -90,30 +101,33 @@ class IbgeAgregatesApi(AbstractApiInterface):
                   raise IOError(f"Não foi possível obter uma variável da lista {[city_id,city_name,time_series]}")
 
          for year, value in time_series.items(): #loop pelo dicionario com o ano como chave e o valor do dado como value
-            
-            new_data_point:DataPoint = DataPoint(city_id, year, data_name, DataPointTypes.FLOAT,value) #cria um novo ponto de dado, mas sem o numero de multiplicação #nem o valor   
-            inference_result:bool = new_data_point.infer_dtype_and_multiply_amnt(data_unit) #tentar inferir o numero pra multiplicar o valor da unidade obtida anteriormente
-            if not inference_result:
-               print("Não foi possível inferir o tipo de dado e qntd de multiplicar do dado")
-                  
-            new_data_point.value = new_data_point.multiply_value() #campo de valor do data_point recebe o valor lida da API e multiplicado
+            new_data_point:DataPoint = DataPoint(city_id, year, data_name,value) #cria um novo ponto de dado, mas sem o numero de multiplicação #nem o valor   
+            if value in self.IBGE_NAN_CODES:  #o valor representa um código especial do IBGE para valores com problemas
+               new_data_point.value = self.IBGE_NAN_CODES[value]["val"]
+               new_data_point.data_type = self.IBGE_NAN_CODES[value]["type"]
+            else: #o valor é normal, tenta inferir seu tipo
+               inference_result:bool = new_data_point.infer_dtype_and_multiply_amnt(data_unit) #tentar inferir o numero pra multiplicar o valor da unidade obtida anteriormente
+               if not inference_result:
+                  print("Não foi possível inferir o tipo de dado e qntd de multiplicar do dado")
+
             return_data_points.append(new_data_point) #adiciona esse data point na lista
 
       return return_data_points
 
-   def __api_to_data_points(self,api_response:list[dict])->list[DataPoint]:
+   def __api_to_data_points(self,api_response:list[dict], classification:str="")->list[DataPoint]:
       return_data_points:list[DataPoint] = []
       
       for variable in api_response: #loop por cada dado bruto/variável na resposta
-         variable_id: int | None = int(variable .get("id")) #id da variável
+         variable_data_points:list[DataPoint] = []
+         
+         variable_id: int | None = int(variable.get("id")) #id da variável
          if variable_id is None:
             raise IOError("não foi possível acessar o id da variável")
          
-         data_name:str | None  = self.__find_data_name_by_id(variable_id)
-         data_unit: str | None = variable .get("unidade")  #unidade que o dado está
+         data_name:str | None  = self.__find_data_name_by_id(variable_id,classification)
+         data_unit: str | None = variable.get("unidade")  #unidade que o dado está
          
-         results_list:list[dict]| None = variable .get("resultados", [])
-         
+         results_list:list[dict]| None = variable.get("resultados", [])
          if any(x is None for x in [variable_id,data_unit,results_list,data_name]): #verifica se foi possível acessar todos os campos
             raise IOError(f"Não foi possível obter uma variável da lista { [variable_id,data_unit,results_list,data_name]}")
 
@@ -121,20 +135,23 @@ class IbgeAgregatesApi(AbstractApiInterface):
             list_of_cities: list[dict]| None = result["series"] #valores do resultado
             processed_result:list[DataPoint] = self.__process_single_api_result(list_of_cities,data_name,data_unit)
 
-            if not return_data_points:
-               return_data_points = processed_result
+            if not variable_data_points:
+               variable_data_points = processed_result
             else:
-               add_data_point_values = lambda x, y: x.multiply_value() + y.multiply_value()
-               summed_vals = list(map(add_data_point_values, return_data_points, processed_result))
+               add_data_point_values = lambda x, y: x.value + y.value
+               summed_vals = list(map(add_data_point_values, variable_data_points, processed_result))
             
                for index, val in enumerate(summed_vals):
-                  return_data_points[index].value = val
-                  
+                  variable_data_points[index].value = val
+
+         return_data_points.extend(variable_data_points)
+
       return return_data_points
    
    def __make_api_call(self,time_series_len:int,cities:list[int],aggregate:int ,variables:str = "", classification:str = "")->list[dict]:
       params:dict = {}
-      if classification:
+      print(classification)
+      if not classification:
          params = {'localidades': f'N6{cities}'}
          if "[" in variables and "]" in variables:
             raise IOError("Não é possível realizar uma chamada da API com uma classificação e mais de uma variável")
@@ -144,11 +161,12 @@ class IbgeAgregatesApi(AbstractApiInterface):
       base_url:str = "https://servicodados.ibge.gov.br/api/v3/agregados/{agregado}/periodos/{periodos}/variaveis/{variaveis}"
 
       url:str = base_url.format(agregado=aggregate , periodos= (-time_series_len), variaveis=variables)
+      print(url,params)
       response = requests.get(url, params=params, verify=False)
 
       if response.status_code == 200: #request teve sucesso
          response_data:list[dict] = response.json()
-         return self.__api_to_data_points(response_data) #adiciona os elementos retornados a lista final de pontos de dados
+         return self.__api_to_data_points(response_data,classification) #adiciona os elementos retornados a lista final de pontos de dados
       else:
          raise RuntimeError("Falha na Request para a API")
 
@@ -169,11 +187,16 @@ class IbgeAgregatesApi(AbstractApiInterface):
       for aggregate in variables_api_calls: #faz as chamadas de APIs que somente tem variáveis
          str_data_variables:str = '|'.join(map(str, variables_api_calls[aggregate])) #transforma as variáveis da API em str 
          api_data_points.extend(self.__make_api_call(time_series_len,cities,aggregate,str_data_variables))
-         print("add a seguinte coisa de variável ", api_data_points[-1])
       
+      print(classification_api_calls)
+      """
+      Eu sei que 3 fors é meio complicado, mas no geral cada for vai ter tipo 2-3 rodadas apenas, na verdade a cada iteração do for interno vai ser extraido 1 dado, então
+      não é tão ineficiente
+      """
       for aggregate in classification_api_calls: #faz as chamadas de APIs que somente tem variáveis
-         for var_key, classification in classification_api_calls[aggregate].items():
-            api_data_points.extend(self.__make_api_call(time_series_len,cities,aggregate,str(var_key),classification)) #adiciona os elementos retornados a lista final de pontos de dados
+         for var_key in classification_api_calls[aggregate]:
+             for classification in classification_api_calls[aggregate][var_key]:
+               api_data_points.extend(self.__make_api_call(time_series_len,cities,aggregate,str(var_key),classification)) #adiciona os elementos retornados a lista final de pontos de dados
       
       return api_data_points
 

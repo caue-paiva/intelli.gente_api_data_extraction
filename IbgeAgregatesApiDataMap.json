@@ -7,7 +7,7 @@
       "PIB SERVICOS" : {"variavel": 6575 , "agregado": 5938 },
       "PIB ADMINISTRACAO PUBLICA" : {"variavel": 525 , "agregado": 5938 },
       "População total estimada do município": {"variavel":93, "agregado":9606 },
-      "Domicílios particulares permanentes" : {"variavel":96, "agregado": 2409, "classificacao": "12235[all]" },
-      "Domicílios particulares permanentes com existência de calçamento/pavimentação da rua" : {"variavel":96, "agregado": 2409, "classificacao": "12235[104562,104563]" }
+      "Domicílios particulares permanentes" : {"variavel":96, "agregado": 2409, "classificacao": "12235[all]|1[1]" },
+      "Domicílios particulares permanentes com existência de calçamento/pavimentação da rua" : {"variavel":96, "agregado": 2409, "classificacao": "12235[104562,104563]|1[1]" }
 }
  

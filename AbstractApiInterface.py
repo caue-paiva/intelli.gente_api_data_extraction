@@ -15,7 +15,6 @@ class AbstractApiInterface(ABC):
    api_name:str
    goverment_agency:str
    _data_map: dict[str, dict] #dicionário extraidos de um JSON para mostrar a classe como accesar os dados na API 
-   _calculated_data_functions: dict[str, dict] #também extraido de um json mas opcional, define dados que são gerados a partir de cálculos com outros (ex: pib per capita)
 
    @abstractmethod
    def __init__(self, api_name:str, goverment_agency:str, api_referen_json_path:str) -> None:
@@ -43,7 +42,6 @@ class AbstractApiInterface(ABC):
    @abstractmethod   
    def extract_data_points(self, cities:list[int] = [] , data_point_names:list[str] = [] ,  time_series_len: int = 0)->list[DataPoint]:
        pass
-
 
    def data_points_to_df(self, data_points: list[DataPoint])->pd.DataFrame:
       """
