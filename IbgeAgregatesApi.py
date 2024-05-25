@@ -49,40 +49,55 @@ class IbgeAgregatesApi(AbstractApiInterface):
       except Exception as e:
            raise RuntimeError("Não foi possível carregar o JSON que mapea os dados do DB para a API")
       
-   def _db_to_api_data_map(self, db_data_list: list[str|int] = []) -> tuple[dict[int,list] ,  dict[int, dict[int,list]]]:
+   def _db_to_api_data_map(self, db_data_list: list[str|int] = []) -> tuple[dict[str,dict] ,  dict[str, dict[int,dict]]]:
       """
-      Tuple: (
-         var dict : {
-            2198298: [189289,2108291]
-         },
-         classification_dict: {
-            2198298 (agregado): { 
-               189289 (var): ["12235[104562,104563]", 12235[all] ] lista de classificações
+
+
+      Return:
+
+         Tuple: (
+            var dict : { (dados da API que apenas precisam de parámetros de variáveis para serem extraidos)
+               "categoriaX": {
+                  2198298 (agregado): [189289,2108291] (variaveis)
+               }
+               ... (mais dados)
+            },
+            classification_dict: { (dados da API que precisam de parámetros de variáveis e classificação para serem extraidos)
+               "categoriaX": {
+                  2198298 (agregado): { 
+                     189289 (var): ["12235[104562,104563]", 12235[all] ] (lista de classificações) ,  "categoria": "categoriaX"
+                  }
+               }
+               ... (mais dados)
             }
-         }
-      )
+         )
       """
 
-      variables_dict: dict[int, list[int]] = {} #dicionario cuja key é o agregado e o value é uma lista de variáveis que pertence a esse agregado
-      classification_dict: dict[int, dict[int,list]] = {}
+      variables_dict: dict[str,dict[int,list]] = {} 
+      classification_dict: dict[str, dict[int,dict]] = {}
 
-      for key,val in self._data_map.items():
-         if key in db_data_list or not db_data_list: #se o dado estiver na lista passada ou se lista for vazia, nesse ultimo caso coloca todos os dados do mapping
-            var:int | None = val.get("variavel") #a variável pode não aparecer em alguns dados buscados
-            aggregate: int = val["agregado"] #agregado sempre deve
-            classification:str | None = val.get("classificacao")
+      for category, data_points in data_points: #loop pelas categorias do json
+         variables_dict[category] = {} #cria o dicionário da categoria
+         classification_dict[category] = {} #cria o dicionário da categoria
 
-            if var is None and classification is None:
-               raise IOError("Ambos a variável e a classificação não existem ou não None")
+         for data_name,api_call_params in self._data_map.items():
+            
+            if data_name in db_data_list or not db_data_list: #se o dado estiver na lista passada ou se lista for vazia, nesse ultimo caso coloca todos os dados do mapping
+               var:int | None = api_call_params.get("variavel") #a variável pode não aparecer em alguns dados buscados
+               aggregate: int = api_call_params["agregado"] #agregado sempre deve
+               classification:str | None = api_call_params.get("classificacao")
 
-            if classification is not None: #caso especial com classificação
-               classification_dict.setdefault(aggregate,{})
-               var_key:int = var if var is not None else -1
-               classification_dict[aggregate].setdefault(var_key,[]) #cria uma lista de classificações associadas àquela variavel
-               classification_dict[aggregate][var_key].append(classification)
-            else:  #caso normal so com a variável
-               variables_dict.setdefault(aggregate,[])
-               variables_dict[aggregate].append(var)
+               if var is None and classification is None:
+                  raise IOError("Ambos a variável e a classificação não existem ou não None")
+
+               if classification is not None: #caso especial com classificação
+                  classification_dict[category].setdefault(aggregate,{})
+                  var_key:int = var if var is not None else -1
+                  classification_dict[category][aggregate].setdefault(var_key,[]) #cria uma lista de classificações associadas àquela variavel
+                  classification_dict[category][aggregate][var_key].append(classification) #coloca a classificação atual na lista de classificações
+               else:  #caso normal so com a variável
+                  variables_dict[category].setdefault(aggregate,[]) #cria a key do agregado, caso n exista e coloca uma lisa vazia
+                  variables_dict[category][aggregate].append(var) #coloca a variavel na lista do agregado
             
 
       return variables_dict,classification_dict
@@ -99,6 +114,7 @@ class IbgeAgregatesApi(AbstractApiInterface):
 
    def __process_single_api_result(self,list_of_cities:list[dict],data_name:str,data_unit:str)->list[DataPoint] :
       return_data_points:list[DataPoint] = []
+      series_years:list[int] = []#variavel para guardar os anos da série histórica dos dados
 
       for city in list_of_cities: #loop pelos municípios
          city_id:int | None = int(city.get("localidade", {}).get("id"))
@@ -107,7 +123,11 @@ class IbgeAgregatesApi(AbstractApiInterface):
 
          if any(x is None for x in [city_id,city_name,time_series]):  #verifica se foi possível acessar todos os campos
                   raise IOError(f"Não foi possível obter uma variável da lista {[city_id,city_name,time_series]}")
-
+         
+         new_series_years:list[int] = int(time_series.keys()) #transforma as keys do dict de series em uma lista de int
+         if len(new_series_years) > series_years: #vamos pegar a série histórica maior entre os municípios, assim se um não tiver dados naquele ano o tamanho da série n diminiu
+            series_years = new_series_years
+        
          for year, value in time_series.items(): #loop pelo dicionario com o ano como chave e o valor do dado como value
             new_data_point:DataPoint = DataPoint(city_id, year, data_name,value) #cria um novo ponto de dado, mas sem o numero de multiplicação #nem o valor   
             if value in self.IBGE_NAN_CODES:  #o valor representa um código especial do IBGE para valores com problemas
@@ -123,9 +143,17 @@ class IbgeAgregatesApi(AbstractApiInterface):
       return return_data_points
 
    def __api_to_data_points(self,api_response:list[dict], classification:str="")->list[DataPoint]:
+      """
+      
+      Return:
+            {
+              "nome_dado": "PIB" , "anos serie": [2022,2012...] , categoria: "economia", lista_dados: [DataPoint]
+            }
+      """
+      
       return_data_points:list[DataPoint] = []
       
-      for variable in api_response: #loop por cada dado bruto/variável na resposta
+      for variable in api_response: #loop por cada dado bruto/variável na resposta, cada loop desse extrai um dado pra tabela
          variable_data_points:list[DataPoint] = []
          
          variable_id: int | None = int(variable.get("id")) #id da variável

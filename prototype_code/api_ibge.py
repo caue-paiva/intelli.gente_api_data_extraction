@@ -83,13 +83,13 @@ url = base_url.format(agregado=agregado, periodos=-7, variaveis=96)
 url3 =  "https://servicodados.ibge.gov.br/api/v3/agregados/2409/periodos/-2/variaveis/96/?classificacao=12235[104562,104563]|1[1]"
 url4 =  "https://servicodados.ibge.gov.br/api/v3/agregados/5938/periodos/-2/variaveis/517|6575"
 
-response = requests.get(url3, params=params, verify=False)
+response = requests.get(url4, params=params, verify=False)
 # Print the response (or handle it as needed)
 print(response.status_code)
 data = response.json()
 #print(data)
 
-with open("teste2.json", "w") as f:
+with open("teste3.json", "w") as f:
    json.dump(data,f, indent=4, ensure_ascii=False)
 
 

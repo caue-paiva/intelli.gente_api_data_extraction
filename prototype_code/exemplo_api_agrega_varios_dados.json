@@ -1,0 +1,82 @@
+[
+    {
+        "id": "517",
+        "variavel": "Valor adicionado bruto a preços correntes da indústria",
+        "unidade": "Mil Reais",
+        "resultados": [
+            {
+                "classificacoes": [],
+                "series": [
+                    {
+                        "localidade": {
+                            "id": "1100072",
+                            "nivel": {
+                                "id": "N6",
+                                "nome": "Município"
+                            },
+                            "nome": "Corumbiara (RO)"
+                        },
+                        "serie": {
+                            "2020": "10846",
+                            "2021": "14003"
+                        }
+                    },
+                    {
+                        "localidade": {
+                            "id": "1100023",
+                            "nivel": {
+                                "id": "N6",
+                                "nome": "Município"
+                            },
+                            "nome": "Ariquemes (RO)"
+                        },
+                        "serie": {
+                            "2020": "404715",
+                            "2021": "406329"
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "6575",
+        "variavel": "Valor adicionado bruto a preços correntes dos serviços, exclusive administração, defesa, educação e saúde públicas e seguridade social",
+        "unidade": "Mil Reais",
+        "resultados": [
+            {
+                "classificacoes": [],
+                "series": [
+                    {
+                        "localidade": {
+                            "id": "1100072",
+                            "nivel": {
+                                "id": "N6",
+                                "nome": "Município"
+                            },
+                            "nome": "Corumbiara (RO)"
+                        },
+                        "serie": {
+                            "2020": "34753",
+                            "2021": "45391"
+                        }
+                    },
+                    {
+                        "localidade": {
+                            "id": "1100023",
+                            "nivel": {
+                                "id": "N6",
+                                "nome": "Município"
+                            },
+                            "nome": "Ariquemes (RO)"
+                        },
+                        "serie": {
+                            "2020": "1206982",
+                            "2021": "1307930"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+]
