@@ -216,8 +216,17 @@ class IbgeAgregatesApi(AbstractApiInterface):
       if not cities:
          #lógica para incluir todas as cidades
          pass
+      
+      api_data_points: list[DataPoint] = []  
+      for category in self._data_map: 
+         for data_point, api_call_params in category.items():
+            aggregate:int = api_call_params.get("agregado")
+            var: str = str([api_call_params.get("variavel")])
+            classification: str = api_call_params.get("classificacao","")
+            api_data_points.extend(self.__make_api_call(time_series_len,cities,aggregate,var,classification))
 
-      variables_api_calls, classification_api_calls = self._db_to_api_data_map(db_data_list)
+
+      """variables_api_calls, classification_api_calls = self._db_to_api_data_map(db_data_list)
       api_data_points: list[DataPoint] = []
    
       for aggregate in variables_api_calls: #faz as chamadas de APIs que somente tem variáveis
@@ -225,15 +234,15 @@ class IbgeAgregatesApi(AbstractApiInterface):
          api_data_points.extend(self.__make_api_call(time_series_len,cities,aggregate,str_data_variables))
       
       print(classification_api_calls)
-      """
+      
       Eu sei que 3 fors é meio complicado, mas no geral cada for vai ter tipo 2-3 rodadas apenas, na verdade a cada iteração do for interno vai ser extraido 1 dado, então
       não é tão ineficiente
-      """
+      
       for aggregate in classification_api_calls: #faz as chamadas de APIs que somente tem variáveis
          for var_key in classification_api_calls[aggregate]:
              for classification in classification_api_calls[aggregate][var_key]:
                api_data_points.extend(self.__make_api_call(time_series_len,cities,aggregate,str(var_key),classification)) #adiciona os elementos retornados a lista final de pontos de dados
-      
+      """
       return api_data_points
 
 if __name__ == "__main__":
