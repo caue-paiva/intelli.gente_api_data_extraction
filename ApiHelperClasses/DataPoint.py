@@ -9,7 +9,6 @@ class DataPointTypes(Enum):
    UNKNOWN = "str"
    NULL = "NULL"
 
-
 class DataPoint:
    """
    Essa classe tem uma relação quase 1 <-> 1 com um linha de uma tabela do BD de categorias com dados brutos (a única diferença seria o campo de multiply amount)
