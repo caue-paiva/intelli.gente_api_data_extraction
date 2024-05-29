@@ -41,7 +41,7 @@ class AbstractApiInterface(ABC):
       pass
 
    @abstractmethod   
-   def extract_data_points(self, cities:list[int] = [] , data_point_names:list[str] = [] ,  time_series_len: int = 0)->list[DataLine]:
+   def extract_data_points(self, cities:list[int] = [] , time_series_len: int = 0)->list[DataLine]:
        pass
 
    def process_raw_data(self,data_collections: list[RawDataCollection])->list[ProcessedDataCollection]:
