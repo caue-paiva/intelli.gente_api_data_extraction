@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Any
 
-class DataPointTypes(Enum):
+class DataLineTypes(Enum):
    INT = "int"
    FLOAT = "float"
    STRING = "str"
@@ -9,16 +9,16 @@ class DataPointTypes(Enum):
    UNKNOWN = "str"
    NULL = "NULL"
 
-class DataPoint:
+class DataLine:
    """
-   Essa classe tem uma relação quase 1 <-> 1 com um linha de uma tabela do BD de categorias com dados brutos (a única diferença seria o campo de multiply amount)
+   Essa classe tem uma relação quase 1 <-> 1 com uma linha de uma tabela do BD de categorias com dados brutos (a única diferença seria o campo de multiply amount)
    mas ele é usado para calcular o campo value e não será colocado na tabela
    
    """
    city_id: int
    year: int
    data_name: str
-   data_type: DataPointTypes
+   data_type: DataLineTypes
    value: Any
    multiply_amount:int|float
 
@@ -29,7 +29,7 @@ class DataPoint:
       year: int, 
       data_name: str, 
       value: Any,
-      data_type: DataPointTypes = DataPointTypes.STRING, 
+      data_type: DataLineTypes = DataLineTypes.STRING, 
       multiply_amount: int|float = 1,
    ) -> None:
       
@@ -40,7 +40,7 @@ class DataPoint:
       self.value = value
       self.multiply_amount = multiply_amount
 
-      if self.data_type not in [DataPointTypes.INT, DataPointTypes.FLOAT] and multiply_amount != 1:
+      if self.data_type not in [DataLineTypes.INT, DataLineTypes.FLOAT] and multiply_amount != 1:
             raise IOError("Valor de multiplicação além de 1 (default) não é valido para tipos que não sejam inteiros ou float")
      
       self.transform_value()
@@ -50,7 +50,7 @@ class DataPoint:
       APIs como a do ibge tem um campo chamado "unidade", onde é explicado qual unidade o dado se refere, essa unidade pode seguir um padrão como
       "mil reais" e a partir desses padrões é possível inferir o tipo de dado e quanto precisa multiplicar o dado
       
-      Transforma o valor do DataPoint baseado no tipo e qntd de multiplicação inferida
+      Transforma o valor do DataLine baseado no tipo e qntd de multiplicação inferida
       """
       sucess_flag:bool = True #vai ser retornado true se foi possível inferir tanto o tipo de dado quanto a qntd pra multiplicar da string
 
@@ -69,11 +69,11 @@ class DataPoint:
          sucess_flag = False
 
 
-      dtype_map: dict[str,DataPointTypes] = {
-         "reais" : DataPointTypes.FLOAT,
-         "real"  : DataPointTypes.FLOAT,
-         "pessoas": DataPointTypes.INT,
-         "unidades": DataPointTypes.INT
+      dtype_map: dict[str,DataLineTypes] = {
+         "reais" : DataLineTypes.FLOAT,
+         "real"  : DataLineTypes.FLOAT,
+         "pessoas": DataLineTypes.INT,
+         "unidades": DataLineTypes.INT
       }
 
       for key in dtype_map:
@@ -83,7 +83,7 @@ class DataPoint:
             break
       else:
          sucess_flag = False
-         self.data_type = DataPointTypes.STRING
+         self.data_type = DataLineTypes.STRING
       
       self.transform_value()
       return sucess_flag
@@ -93,13 +93,13 @@ class DataPoint:
       Transforma o campo value de acordo com o tipo de dado e o valor de multiplicar
       """
       match (self.data_type):
-       case DataPointTypes.STRING:
+       case DataLineTypes.STRING:
             self.value = str(self.value)
-       case DataPointTypes.INT:
+       case DataLineTypes.INT:
             self.value = int(self.value) * self.multiply_amount
-       case DataPointTypes.FLOAT:
+       case DataLineTypes.FLOAT:
             self.value = float(self.value) * self.multiply_amount
-       case DataPointTypes.BOOL:
+       case DataLineTypes.BOOL:
             self.value = bool(self.value) 
        case _:
             self.value = str(self.value) #caso o tipo de dado seja desconhecido, ele será um string
@@ -110,3 +110,4 @@ class DataPoint:
       id_muni: {self.city_id}  
       valor: {self.value}  
       """
+   

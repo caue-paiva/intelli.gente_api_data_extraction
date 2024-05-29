@@ -1,4 +1,5 @@
-from  .DataPoint import DataPoint
+from  .DataLine import DataLine
+from .DataCollections import RawDataCollection , ProcessedDataCollection
 from abc import ABC , abstractmethod
 import pandas as pd
 
@@ -40,32 +41,36 @@ class AbstractApiInterface(ABC):
       pass
 
    @abstractmethod   
-   def extract_data_points(self, cities:list[int] = [] , data_point_names:list[str] = [] ,  time_series_len: int = 0)->list[DataPoint]:
+   def extract_data_points(self, cities:list[int] = [] , data_point_names:list[str] = [] ,  time_series_len: int = 0)->list[DataLine]:
        pass
 
-   def data_points_to_df(self, data_points: list[dict])->pd.DataFrame:
+   def process_raw_data(self,data_collections: list[RawDataCollection])->list[ProcessedDataCollection]:
       """
-      Recebe uma lista de pontos de dados (equivalente a uma linha da tabela) e une eles num df no formato dos dados nas tabelas do Data Warehouse
+      Recebe uma lista de Coleções de Dados não processados (linhas da tabela e dados sobre a categoria e série histórica), transforma esses dados em um DF e converte essa lista
+      em uma lista de coleções de dados processados
+    
       O algoritmo de transformar a lista em um dataframe da forma mais eficiente foi baseada nessa discussão: https://stackoverflow.com/questions/41888080/efficient-way-to-add-rows-to-dataframe/41888241#41888241
 
       Args:
-         data_points (list[dict]) : lista de dicionários no formato: {"nome_dado": "PIB" , "anos_serie": [2022] , "categoria": "economia", "lista_dados": list[DataPoint] }
+        data_collections (list[RawDataCollection]) : Lista de objetos de coleções de dados não processados, contém listas dos dados coletados e contextualização sobre do que se trata aqueles dados e sobre a série historica
 
       Return:
          (pd.Dataframe) : df no formato da tabela de dados brutos do Data Warehouse
    
       """
-      data_point_dict: dict [int, list] = {} #dicionário com a chave sendo o index da linha e o valor sendo uma lista com os valores da linha a ser colocada
-      #no df
+      processed_data_list:list[ProcessedDataCollection] = []
 
       dict_index = 0
-      for variable in data_points: #loop por todas as variáveis
-         for  point in variable["lista_dados"]: #constroi o dict com os dados da lista de DataPoints de cada variável
+      for collection in data_collections: #loop por todas as variáveis
+         data_point_dict: dict [int, list] = {} #dicionário com a chave sendo o index da linha e o valor sendo uma lista com os valores da linha a ser colocada no df
+         
+         for point in collection.data_lines : #constroi o dict com os dados da lista de DataPoints de cada variável
             data_point_dict[dict_index] = [point.city_id, point.year, point.data_name,point.value ,point.data_type.value]
             dict_index+=1
+         columns:list[str] = [self.DB_CITY_ID_COLUMN, self.DB_YEAR_COLUMN, self.DB_DATA_IDENTIFIER_COLUMN, self.DB_DATA_VALUE_COLUMN, self.DB_DTYPE_COLUMN]
+         df: pd.DataFrame = pd.DataFrame.from_dict(data_point_dict,orient="index",columns=columns) #cria um dataframe a partir do dicionário criado
+         processed_data_list.append(collection.create_processed_collection(df))
+  
+      return processed_data_list
+   
 
-      #coloca as colunas do dataframe
-      columns:list[str] = [self.DB_CITY_ID_COLUMN, self.DB_YEAR_COLUMN, self.DB_DATA_IDENTIFIER_COLUMN, self.DB_DATA_VALUE_COLUMN, self.DB_DTYPE_COLUMN]
-      df: pd.DataFrame = pd.DataFrame.from_dict(data_point_dict,orient="index",columns=columns) #cria um dataframe a partir do dicionário criado
-      
-      return df
