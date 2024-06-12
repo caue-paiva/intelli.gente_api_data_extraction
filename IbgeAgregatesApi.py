@@ -1,7 +1,7 @@
 from ApiHelperClasses.AbstractApiInterface import AbstractApiInterface
 from ApiHelperClasses.DataLine  import DataLine, DataLineTypes
 from ApiHelperClasses.DataCollections import RawDataCollection ,ProcessedDataCollection
-import requests,json , os, urllib3
+import requests,json , os, urllib3 , time
 
 #ao chamar a API do IBGE a lib de requests fica reclamando que a conexão é insegura, essa linha desabilita isso
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -21,6 +21,7 @@ def __print_processed_data(data_list:list[ProcessedDataCollection]):
       print(collection.category)
       print(collection.df.head(5))
       print(collection.time_series_years)
+
 
 
 class IbgeAgregatesApi(AbstractApiInterface):
@@ -170,15 +171,14 @@ class IbgeAgregatesApi(AbstractApiInterface):
       """
       params:dict = {}
       if not classification:
-         params = {'localidades': f'N6{cities}'}
+         params = {'localidades': f'N6'}
       else:
-         params = {"classificacao": classification ,'localidades': f'N6{cities}' }
+         params = {"classificacao": classification ,'localidades': 'N6'}
 
       base_url:str = "https://servicodados.ibge.gov.br/api/v3/agregados/{agregado}/periodos/{periodos}/variaveis/{variaveis}"
 
       url:str = base_url.format(agregado=aggregate , periodos= (-time_series_len), variaveis=variable)
       response = requests.get(url, params=params, verify=False)
-
       if response.status_code == 200: #request teve sucesso
          response_data:list[dict] = response.json()
          return self.__api_to_data_points(response_data,classification) #adiciona os elementos retornados a lista final de pontos de dados
@@ -213,6 +213,8 @@ class IbgeAgregatesApi(AbstractApiInterface):
             classification: str = api_call_params.get("classificacao","") #classificação da variável, caso exista
             
             call_result:RawDataCollection = self.__make_api_call(time_series_len,cities,aggregate,var,classification)
+            print("chamada")
+            time.sleep(2)
             api_data_points.append(call_result)
 
       return api_data_points
@@ -226,4 +228,6 @@ if __name__ == "__main__":
    data_list:list[ProcessedDataCollection] = api1.process_raw_data(d_points)
    __print_processed_data(data_list)
 
-   #df.to_csv(os.path.join("dados_extraidos","base_agregados_novo_teste.csv"))
+   df = data_list[0].df
+   df =  df [df["ano"] == "2015" ]
+   df.to_csv(os.path.join("dados_extraidos","base_agregados_todos_munic.csv"))

@@ -75,7 +75,7 @@ variaveis_str:str = '|'.join(map(str, variaveis))
 
 params = {
    # "classificacao" : "12235[0,104563,104562]",
-    'localidades': f'N6{id_municipios}'
+    'localidades': f'N6'
 }
 
 print(str(id_municipios))
